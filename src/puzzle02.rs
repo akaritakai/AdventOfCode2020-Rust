@@ -43,7 +43,7 @@ impl Puzzle02 {
 fn parse(line: &str) -> (usize, usize, char, String) {
     lazy_static! {
             static ref RE: Regex = Regex::new(r"(\d+)-(\d+) ([a-z]): ([a-z]+)").unwrap();
-        }
+    }
     let cap = RE.captures(line).unwrap();
     return (cap[1].parse::<usize>().unwrap(),
             cap[2].parse::<usize>().unwrap(),
