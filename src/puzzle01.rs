@@ -1,5 +1,5 @@
 use crate::puzzle::AbstractPuzzle;
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 pub struct Puzzle01 {
     input: String,
@@ -11,29 +11,22 @@ impl AbstractPuzzle for Puzzle01 {
     }
 
     fn solve_part_1(&self) -> String {
-        let mut numbers : HashMap<u32, usize> = HashMap::new();
-        for n in self.numbers().iter() {
-            match numbers.get_mut(n) {
-                Some(count) => *count += 1,
-                None => {
-                    numbers.insert(*n, 1);
-                    ()
-                }
-            }
-        }
-        for n in numbers.iter() {
-            let n1 = *(n.0);
+        let mut numbers : HashSet<u32> = HashSet::new();
+        for line in self.input.lines() {
+            let n1 = line.parse::<u32>().unwrap();
             let n2 = 2020 - n1;
-            let count = numbers.get(&n2);
-            if count.is_some() && (n1 != n2 || *count.unwrap() >= 2) {
-                return format!("{}", n1 * n2);
+            if numbers.contains(&n2) {
+                return (n1 * n2).to_string();
             }
+            numbers.insert(n1);
         }
         panic!("Unable to find the solution");
     }
 
     fn solve_part_2(&self) -> String {
-        let mut numbers = self.numbers();
+        let mut numbers: Vec<u32> = self.input.lines()
+            .map(|line| line.parse::<u32>().unwrap())
+            .collect();
         numbers.sort();
         for i in 0..numbers.len() - 2 {
             let n1 = numbers[i];
@@ -48,7 +41,7 @@ impl AbstractPuzzle for Puzzle01 {
                 } else if sum > 2020 {
                     k -= 1;
                 } else {
-                    return format!("{}", n1 * n2 * n3);
+                    return (n1 * n2 * n3).to_string();
                 }
             }
         }
@@ -61,15 +54,5 @@ impl Puzzle01 {
         return Box::new(Puzzle01 {
             input: input.to_string()
         });
-    }
-
-    fn numbers(&self) -> Vec<u32> {
-        let mut numbers: Vec<u32> = vec![];
-        let lines = self.input.lines();
-        for line in lines {
-            let number = line.parse::<u32>().unwrap();
-            numbers.push(number);
-        }
-        return numbers;
     }
 }

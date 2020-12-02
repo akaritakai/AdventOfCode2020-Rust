@@ -1,4 +1,4 @@
-use std::{fs};
+use std::fs;
 use std::path::PathBuf;
 use std::sync::{RwLock, Arc};
 use std::collections::HashMap;

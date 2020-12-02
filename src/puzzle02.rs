@@ -1,5 +1,5 @@
 use crate::puzzle::AbstractPuzzle;
-use regex::{Regex};
+use regex::Regex;
 
 pub struct Puzzle02 {
     input: String,
