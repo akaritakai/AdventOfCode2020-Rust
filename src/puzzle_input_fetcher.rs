@@ -40,7 +40,7 @@ impl PuzzleInputFetcher {
                             let session_token = fs::read_to_string(PathBuf::from("cookie.txt"))
                                 .map_err(|e| Error::new(format!(
                                     "Failed to fetch session token: {}", e)))?;
-                            self.session_token.push_str(session_token.as_str());
+                            self.session_token.push_str(session_token.trim());
                             *is_session_token_set = true;
                         }
                     }
