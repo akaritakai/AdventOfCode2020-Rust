@@ -33,11 +33,11 @@ impl PuzzleInputFetcher {
                 }
                 return Ok(cache.get(&day).unwrap().to_owned());
             }
-            let remote_input = self.fetch_remote_puzzle_input(day);
+            let remote_input = self.fetch_remote_puzzle_input(day)?;
             let mut cache = self.cache.write().unwrap();
             if !cache.contains_key(&day) {
-                cache.insert(day, remote_input.as_ref().unwrap().clone());
-                self.store_puzzle_input_locally(day, remote_input.as_ref().unwrap().as_str());
+                cache.insert(day, remote_input.clone());
+                self.store_puzzle_input_locally(day, remote_input.clone().as_str());
             }
             return Ok(cache.get(&day).unwrap().to_owned());
         }
