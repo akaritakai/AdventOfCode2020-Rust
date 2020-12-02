@@ -11,10 +11,10 @@ mod puzzle01;
 mod puzzle02;
 
 fn main() {
-    let fetcher = PuzzleInputFetcher::create();
+    let mut fetcher = PuzzleInputFetcher::create();
     let puzzles : Vec<Box<dyn AbstractPuzzle>> = vec![
-        Puzzle01::create(fetcher.get_puzzle_input(1).unwrap().as_str()),
-        Puzzle02::create(fetcher.get_puzzle_input(2).unwrap().as_str())
+        Puzzle01::create(fetcher.get_puzzle_input(1).unwrap()),
+        Puzzle02::create(fetcher.get_puzzle_input(2).unwrap())
     ];
     for puzzle in puzzles.iter() {
         let day = format!("{:02}", puzzle.get_day());
