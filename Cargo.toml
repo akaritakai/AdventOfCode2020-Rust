@@ -10,3 +10,8 @@ edition = "2018"
 lazy_static = "1.4.0"
 reqwest = { version = "0.10.9", features = ["blocking"] }
 regex = "1.4.2"
+
+[dev-dependencies]
+mockito = "0.28.0"
+rand = "0.7.3"
+tempfile = "3.1.0"
