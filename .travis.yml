@@ -24,4 +24,4 @@ script: |
   cargo build --verbose &&
   cargo test --verbose
 after_success: |
-  cargocoveralls --kcov-build-location "${HOME}/kcov/"
+  cargo coveralls --kcov-build-location "${HOME}/kcov/"
