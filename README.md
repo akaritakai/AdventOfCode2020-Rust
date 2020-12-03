@@ -1,6 +1,6 @@
 # Advent Of Code 2020 Solutions
 
-[![Build Status](https://travis-ci.com/akaritakai/AdventOfCode2020-Rust.svg)](https://travis-ci.org/akaritakai/AdventOfCode2020-Rust)
+[![Build Status](https://travis-ci.com/akaritakai/AdventOfCode2020-Rust.svg)](https://travis-ci.com/akaritakai/AdventOfCode2020-Rust)
 [![Code Coverage](https://img.shields.io/codecov/c/github/akaritakai/AdventOfCode2020-Rust.svg)](https://codecov.io/gh/akaritakai/AdventOfCode2020-Rust)
 
 This repo contains my Advent Of Code 2020 solutions in Rust.
