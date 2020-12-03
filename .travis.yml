@@ -11,7 +11,6 @@ addons:
       - gcc
       - binutils-dev
       - libiberty-dev
-script: cargo test --verbose
 after_success: |
   wget https://github.com/SimonKagstrom/kcov/archive/master.tar.gz &&
   tar xzf master.tar.gz &&
