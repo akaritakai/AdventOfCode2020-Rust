@@ -1,6 +1,8 @@
 language: rust
 rust:
   - 1.48.0
+cache:
+  - cargo
 addons:
   apt:
     packages:
