@@ -38,7 +38,7 @@ impl Puzzle04 {
 
 fn parse_passport(passport: &str) -> HashMap<String, String> {
     passport.split_whitespace()
-        .filter_map(|token| parse_passport_entry(token))
+        .filter_map(|entry| parse_passport_entry(entry))
         .collect::<HashMap<_, _>>()
 }
 
