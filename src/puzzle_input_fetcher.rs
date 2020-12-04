@@ -63,10 +63,9 @@ impl PuzzleInputFetcher {
             // Puzzle is not in our cache
             let mut is_input_set = self.is_input_set[index].write().unwrap();
             if is_input_set.not() {
-                let local_input = self.fetch_local_puzzle_input(day);
-                if local_input.is_ok() {
+                if let Ok(local_input) = self.fetch_local_puzzle_input(day) {
                     // Puzzle is in our local store
-                    self.inputs[index].push_str(local_input.unwrap().as_str());
+                    self.inputs[index].push_str(local_input.as_str());
                     *is_input_set = true;
                     return Ok(self.inputs[index].as_str())
                 }
@@ -112,7 +111,7 @@ impl PuzzleInputFetcher {
             .header("Cookie", format!("session={}", session_token))
             .send()
             .map_err(|e| format!("Failed to fetch remote puzzle input for day {}: {}", day, e))?;
-        return if response.status() != StatusCode::OK {
+        if response.status() != StatusCode::OK {
             Err(format!("Failed to fetch remote puzzle input for day {}: \
                          Got status code = {}", day, response.status()))
         } else {
@@ -131,11 +130,11 @@ impl PuzzleInputFetcher {
         let has_right_length = session_token.len() == 96;
         let has_right_charset = session_token.chars()
             .all(|x| (x >= '0' && x <= '9') || (x >= 'a' && x <= 'z'));
-        return if !has_right_length || !has_right_charset {
+        if !has_right_length || !has_right_charset {
             Err(format!("Session token is not in the right format. \
                          Expected 96 lowercase hex digits. Got: {}", session_token))
         } else {
-            Ok(session_token.to_string())
+            Ok(session_token)
         }
     }
 }

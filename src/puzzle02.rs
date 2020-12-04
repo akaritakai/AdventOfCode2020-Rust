@@ -15,7 +15,7 @@ impl AbstractPuzzle for Puzzle02 {
             .map(|line| parse(line))
             .filter(|(lower, upper, letter, password)| {
                 let count = password.matches(*letter).count();
-                return count >= *lower && count <= *upper;
+                count >= *lower && count <= *upper
             })
             .count()
             .to_string()

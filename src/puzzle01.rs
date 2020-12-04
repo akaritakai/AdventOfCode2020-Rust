@@ -1,5 +1,6 @@
 use crate::puzzle::AbstractPuzzle;
 use std::collections::HashSet;
+use std::cmp::Ordering;
 
 pub struct Puzzle01 {
     input: String,
@@ -27,7 +28,7 @@ impl AbstractPuzzle for Puzzle01 {
         let mut numbers: Vec<u32> = self.input.lines()
             .map(|line| line.parse::<u32>().unwrap())
             .collect();
-        numbers.sort();
+        numbers.sort_unstable();
         for i in 0..numbers.len() - 2 {
             let n1 = numbers[i];
             let mut j = i + 1;
@@ -36,12 +37,10 @@ impl AbstractPuzzle for Puzzle01 {
                 let n2 = numbers[j];
                 let n3 = numbers[k];
                 let sum = n1 + n2 + n3;
-                if sum < 2020 {
-                    j += 1;
-                } else if sum > 2020 {
-                    k -= 1;
-                } else {
-                    return (n1 * n2 * n3).to_string();
+                match sum.cmp(&2020) {
+                    Ordering::Less => j += 1,
+                    Ordering::Greater => k -= 1,
+                    Ordering::Equal => return (n1 * n2 * n3).to_string()
                 }
             }
         }
