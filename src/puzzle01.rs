@@ -7,7 +7,7 @@ pub struct Puzzle01 {
 
 impl AbstractPuzzle for Puzzle01 {
     fn get_day(&self) -> u8 {
-        return 1;
+        1
     }
 
     fn solve_part_1(&self) -> String {
@@ -51,9 +51,9 @@ impl AbstractPuzzle for Puzzle01 {
 
 impl Puzzle01 {
     pub fn create(input: &str) -> Box<dyn AbstractPuzzle> {
-        return Box::new(Puzzle01 {
+        Box::new(Puzzle01 {
             input: input.to_string()
-        });
+        })
     }
 }
 

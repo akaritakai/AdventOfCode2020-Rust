@@ -6,11 +6,11 @@ pub struct Puzzle03 {
 
 impl AbstractPuzzle for Puzzle03 {
     fn get_day(&self) -> u8 {
-        return 3;
+        3
     }
 
     fn solve_part_1(&self) -> String {
-        return self.trees_on_slope(3, 1).to_string();
+        self.trees_on_slope(3, 1).to_string()
     }
 
     fn solve_part_2(&self) -> String {
@@ -20,23 +20,23 @@ impl AbstractPuzzle for Puzzle03 {
         count *= self.trees_on_slope(5, 1);
         count *= self.trees_on_slope(7, 1);
         count *= self.trees_on_slope(1, 2);
-        return count.to_string();
+        count.to_string()
     }
 }
 
 impl Puzzle03 {
     pub fn create(input: &str) -> Box<dyn AbstractPuzzle> {
-        return Box::new(Puzzle03 {
+        Box::new(Puzzle03 {
             input: input.to_string()
-        });
+        })
     }
 
     fn trees_on_slope(&self, x: usize, y: usize) -> usize {
-        return self.input.lines()
+        self.input.lines()
             .step_by(y)
             .enumerate()
             .filter(|(i, line)| line.chars().cycle().nth(i * x) == Some('#'))
-            .count();
+            .count()
     }
 }
 

@@ -31,10 +31,10 @@ pub struct PuzzleInputFetcher {
 impl PuzzleInputFetcher {
     // Creates a PuzzleInputFetcher using the default values
     pub fn create() -> PuzzleInputFetcher {
-        return PuzzleInputFetcher::create_custom(
+        PuzzleInputFetcher::create_custom(
             "https://adventofcode.com",
             Path::new("puzzle"),
-            Path::new("cookie.txt"));
+            Path::new("cookie.txt"))
     }
 
     // Creates a PuzzleInputFetcher using the with a specified base url, puzzle input path, and
@@ -43,7 +43,7 @@ impl PuzzleInputFetcher {
         -> PuzzleInputFetcher {
         let mut is_input_set = Vec::with_capacity(25);
         (0..25).for_each(|_| is_input_set.push(Arc::new(RwLock::new(false))));
-        return PuzzleInputFetcher {
+        PuzzleInputFetcher {
             base_url: base_url.to_string(),
             input_path: input_path.to_path_buf(),
             is_input_set,
@@ -51,7 +51,7 @@ impl PuzzleInputFetcher {
             session_token_path: session_token_path.to_path_buf(),
             is_session_token_set: Arc::new(RwLock::new(false)),
             session_token: String::new(),
-        };
+        }
     }
 
     // Returns the puzzle input for the given day first by fetching it from the in-memory cache,
@@ -88,13 +88,13 @@ impl PuzzleInputFetcher {
                 return Ok(self.inputs[index].as_str())
             }
         }
-        return Ok(self.inputs[index].as_str());
+        Ok(self.inputs[index].as_str())
     }
 
     fn fetch_local_puzzle_input(&self, day: u8) -> Result<String> {
         let path = self.input_path.to_path_buf().join(day.to_string());
-        return fs::read_to_string(path)
-            .map_err(|e| format!("Failed to fetch local puzzle for day {}: {}", day, e));
+        fs::read_to_string(path)
+            .map_err(|e| format!("Failed to fetch local puzzle for day {}: {}", day, e))
     }
 
     fn store_puzzle_input_locally(&self, day: u8, input: &str) {
@@ -141,11 +141,11 @@ impl PuzzleInputFetcher {
 }
 
 fn remote_url_path(day: u8) -> String {
-    return format!("/2020/day/{}/input", day.to_string());
+    format!("/2020/day/{}/input", day.to_string())
 }
 
 fn path_to_str(path: &Path) -> String {
-    return path.to_path_buf().into_os_string().into_string().unwrap();
+    path.to_path_buf().into_os_string().into_string().unwrap()
 }
 
 type Result<T> = std::result::Result<T, String>;
@@ -154,17 +154,21 @@ type Result<T> = std::result::Result<T, String>;
 mod tests {
     use crate::puzzle_input_fetcher::{PuzzleInputFetcher, remote_url_path};
 
-    use mockito::mock;
     use rand::Rng;
     use std::fs::File;
     use std::io::Write;
     use tempfile::{tempdir, NamedTempFile};
+    use httpmock::Method::GET;
+    use httpmock::MockServer;
 
+    //noinspection DuplicatedCode
     #[test]
     fn test_fetch_from_local_store() {
-        let base_url = &mockito::server_url();
+        let server = MockServer::start();
+        let base_url = &server.base_url();
         let puzzle_store_dir = tempdir().unwrap();
         let session_token_path = NamedTempFile::new().unwrap();
+        let session_token = random_session_token();
         let mut fetcher = PuzzleInputFetcher::create_custom(
             base_url,
             puzzle_store_dir.path(),
@@ -174,14 +178,22 @@ mod tests {
             let puzzle_file_path = puzzle_store_dir.path().join(day.to_string());
             let mut puzzle_file = File::create(puzzle_file_path).unwrap();
             puzzle_file.write_all(puzzle_input.as_bytes()).unwrap();
+            let mock = server.mock(|when, then| {
+                when.method(GET)
+                    .path(remote_url_path(day).as_str())
+                    .header("Cookie", format!("session={}", session_token).as_str());
+                then.status(501);
+            });
             assert_eq!(fetcher.get_puzzle_input(day).unwrap(), puzzle_input);
+            mock.assert_hits(0);
         }
     }
 
     //noinspection DuplicatedCode
     #[test]
     fn test_fetch_from_remote_store() {
-        let base_url = &mockito::server_url();
+        let server = MockServer::start();
+        let base_url = &server.base_url();
         let puzzle_store_dir = tempdir().unwrap();
         let mut session_token_path = NamedTempFile::new().unwrap();
         let session_token = random_session_token();
@@ -192,19 +204,23 @@ mod tests {
             session_token_path.path());
         for day in 1..26 {
             let puzzle_input = random_puzzle();
-            let mock = mock("GET", remote_url_path(day).as_str())
-                .match_header("Cookie", format!("session={}", session_token).as_str())
-                .with_status(200)
-                .with_body(puzzle_input.as_str())
-                .create();
+            let mock = server.mock(|when, then| {
+                when.method(GET)
+                    .path(remote_url_path(day).as_str())
+                    .header("Cookie", format!("session={}", session_token).as_str());
+                then.status(200)
+                    .body(&puzzle_input);
+            });
             assert_eq!(fetcher.get_puzzle_input(day).unwrap(), puzzle_input);
-            assert!(mock.matched());
+            mock.assert();
         }
     }
 
+    //noinspection DuplicatedCode
     #[test]
     fn test_error_returned_when_all_sources_unavailable() {
-        let base_url = &mockito::server_url();
+        let server = MockServer::start();
+        let base_url = &server.base_url();
         let puzzle_store_dir = tempdir().unwrap();
         let mut session_token_path = NamedTempFile::new().unwrap();
         let session_token = random_session_token();
@@ -214,13 +230,22 @@ mod tests {
             puzzle_store_dir.path(),
             session_token_path.path());
         for day in 1..26 {
+            let mock = server.mock(|when, then| {
+                when.method(GET)
+                    .path(remote_url_path(day).as_str())
+                    .header("Cookie", format!("session={}", session_token).as_str());
+                then.status(501);
+            });
             assert!(fetcher.get_puzzle_input(day).is_err());
+            mock.assert();
         }
     }
 
+    //noinspection DuplicatedCode
     #[test]
     fn test_error_when_fetching_from_remote_if_missing_session_token() {
-        let base_url = &mockito::server_url();
+        let server = MockServer::start();
+        let base_url = &server.base_url();
         let puzzle_store_dir = tempdir().unwrap();
         let session_token_path = NamedTempFile::new().unwrap();
         let mut fetcher = PuzzleInputFetcher::create_custom(
@@ -228,18 +253,23 @@ mod tests {
             puzzle_store_dir.path(),
             session_token_path.path());
         for day in 1..26 {
-            let mock = mock("GET", remote_url_path(day).as_str())
-                .with_status(400)
-                .with_body("Puzzle inputs differ by user.  Please log in to get your puzzle input.")
-                .create();
+            let mock = server.mock(|when, then| {
+                when.method(GET)
+                    .path(remote_url_path(day).as_str());
+                then.status(400)
+                    .body("Puzzle inputs differ by user.  Please log in to get your puzzle input.");
+            });
             assert!(fetcher.get_puzzle_input(day).is_err());
-            assert!(!mock.matched())
+            mock.assert_hits(0);
         }
     }
 
     //noinspection DuplicatedCode
     #[test]
     fn test_error_when_fetching_from_remote_if_invalid_session_token() {
+        let server = MockServer::start();
+        let base_url = &server.base_url();
+        let puzzle_store_dir = tempdir().unwrap();
         let mut truncated_token = random_session_token();
         truncated_token.truncate(95);
         let session_tokens: Vec<String> = vec![
@@ -249,8 +279,6 @@ mod tests {
             String::new(), // session token is the empty string
         ];
         for session_token in session_tokens {
-            let base_url = &mockito::server_url();
-            let puzzle_store_dir = tempdir().unwrap();
             let mut session_token_path = NamedTempFile::new().unwrap();
             session_token_path.write_all(session_token.as_bytes()).unwrap();
             let mut fetcher = PuzzleInputFetcher::create_custom(
@@ -259,20 +287,24 @@ mod tests {
                 session_token_path.path());
             for day in 1..26 {
                 let puzzle_input = random_puzzle();
-                let mock = mock("GET", remote_url_path(day).as_str())
-                    .match_header("Cookie", format!("session={}", session_token).as_str())
-                    .with_status(200)
-                    .with_body(puzzle_input.as_str())
-                    .create();
+                let mock = server.mock(|when, then| {
+                    when.method(GET)
+                        .path(remote_url_path(day).as_str())
+                        .header("Cookie", format!("session={}", session_token).as_str());
+                    then.status(200)
+                        .body(puzzle_input);
+                });
                 assert!(fetcher.get_puzzle_input(day).is_err());
-                assert!(!mock.matched());
+                mock.assert_hits(0);
             }
         }
     }
 
+    //noinspection DuplicatedCode
     #[test]
     fn test_error_when_fetching_from_remote_if_session_token_wrong() {
-        let base_url = &mockito::server_url();
+        let server = MockServer::start();
+        let base_url = &server.base_url();
         let puzzle_store_dir = tempdir().unwrap();
         let mut session_token_path = NamedTempFile::new().unwrap();
         let session_token = random_session_token();
@@ -282,18 +314,23 @@ mod tests {
             puzzle_store_dir.path(),
             session_token_path.path());
         for day in 1..26 {
-            let mock = mock("GET", remote_url_path(day).as_str())
-                .with_status(400)
-                .with_body("Puzzle inputs differ by user.  Please log in to get your puzzle input.")
-                .create();
+            let mock = server.mock(|when, then| {
+                when.method(GET)
+                    .path(remote_url_path(day).as_str())
+                    .header("Cookie", format!("session={}", session_token).as_str());
+                then.status(400)
+                    .body("Puzzle inputs differ by user.  Please log in to get your puzzle input.");
+            });
             assert!(fetcher.get_puzzle_input(day).is_err());
-            assert!(mock.matched())
+            mock.assert();
         }
     }
 
+    //noinspection DuplicatedCode
     #[test]
     fn test_error_when_fetching_from_remote_if_puzzle_requested_early() {
-        let base_url = &mockito::server_url();
+        let server = MockServer::start();
+        let base_url = &server.base_url();
         let puzzle_store_dir = tempdir().unwrap();
         let mut session_token_path = NamedTempFile::new().unwrap();
         let session_token = random_session_token();
@@ -303,15 +340,17 @@ mod tests {
             puzzle_store_dir.path(),
             session_token_path.path());
         for day in 1..26 {
-            let mock = mock("GET", remote_url_path(day).as_str())
-                .match_header("Cookie", format!("session={}", session_token).as_str())
-                .with_status(404)
-                .with_body("Please don't repeatedly request this endpoint before it unlocks! \
-                                 The calendar countdown is synchronized with the server time; \
-                                 the link will be enabled on the calendar the instant this puzzle becomes available.")
-                .create();
+            let mock = server.mock(|when, then| {
+                when.method(GET)
+                    .path(remote_url_path(day).as_str())
+                    .header("Cookie", format!("session={}", session_token).as_str());
+                then.status(404)
+                    .body("Please don't repeatedly request this endpoint before it unlocks! \
+                           The calendar countdown is synchronized with the server time; \
+                           the link will be enabled on the calendar the instant this puzzle becomes available.");
+            });
             assert!(fetcher.get_puzzle_input(day).is_err());
-            assert!(mock.matched());
+            mock.assert();
         }
     }
 
@@ -328,19 +367,19 @@ mod tests {
             "abcdefghijklmnopqrstuvwxyz", // ASCII codes 97-122 (lowercase letters)
             "{|}~" // ASCII codes 123-126 (symbols)
         );
-        return random_string(charset.as_str(), 65535);
+        random_string(charset.as_str(), 65535)
     }
 
     fn random_session_token() -> String {
         // Session tokens appear to be 96 characters of ASCII hex digits
-        return random_string("0123456789abcdef", 96);
+        random_string("0123456789abcdef", 96)
     }
 
     fn random_string(charset: &str, length: usize) -> String {
         let mut rng = rand::thread_rng();
-        return (0..length).map(|_| {
+        (0..length).map(|_| {
             let i = rng.gen_range(0, charset.len());
-            return charset.chars().nth(i).unwrap();
-        }).collect();
+            charset.chars().nth(i).unwrap()
+        }).collect()
     }
 }

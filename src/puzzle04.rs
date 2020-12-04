@@ -8,61 +8,57 @@ pub struct Puzzle04 {
 
 impl AbstractPuzzle for Puzzle04 {
     fn get_day(&self) -> u8 {
-        return 4;
+        4
     }
 
     fn solve_part_1(&self) -> String {
-        return self.input.split("\n\n")
+        self.input.split("\n\n")
             .map(|passport| parse_passport(passport))
             .filter(|passport| has_required_fields(passport))
             .count()
-            .to_string();
+            .to_string()
     }
 
     fn solve_part_2(&self) -> String {
-        return self.input.split("\n\n")
+        self.input.split("\n\n")
             .map(|passport| parse_passport(passport))
-            .filter(|passport| has_required_fields(passport))
-            .filter(|passport| all_values_valid(passport))
+            .filter(|passport| has_required_fields(passport) && all_values_valid(passport))
             .count()
-            .to_string();
+            .to_string()
     }
 }
 
 impl Puzzle04 {
     pub fn create(input: &str) -> Box<dyn AbstractPuzzle> {
-        return Box::new(Puzzle04 {
+        Box::new(Puzzle04 {
             input: input.to_string()
-        });
+        })
     }
 }
 
 fn parse_passport(passport: &str) -> HashMap<String, String> {
-    return passport.split_whitespace()
-        .map(|token| parse_passport_entry(token))
-        .filter(|entry| entry.is_some())
-        .map(|entry| entry.unwrap())
-        .collect::<HashMap<_, _>>();
+    passport.split_whitespace()
+        .filter_map(|token| parse_passport_entry(token))
+        .collect::<HashMap<_, _>>()
 }
 
 fn parse_passport_entry(entry: &str) -> Option<(String, String)> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"^(byr|iyr|eyr|hgt|hcl|ecl|pid|cid):(\S+)$").unwrap();
     }
-    return RE.captures(entry).map(|cap| (cap[1].to_string(), cap[2].to_string()));
+    RE.captures(entry).map(|cap| (cap[1].to_string(), cap[2].to_string()))
 }
 
 fn has_required_fields(passport: &HashMap<String, String>) -> bool {
-    return passport.iter().count() == 8
-        || passport.iter().count() == 7 && !passport.contains_key("cid");
+    passport.len() == 8 || passport.len() == 7 && !passport.contains_key("cid")
 }
 
 fn all_values_valid(passport: &HashMap<String, String>) -> bool {
-    return passport.iter().all(|(key, value)| is_value_valid(key.as_str(), value.as_str()));
+    passport.iter().all(|(key, value)| is_value_valid(key.as_str(), value.as_str()))
 }
 
 fn is_value_valid(key: &str, value: &str) -> bool {
-    return match key {
+    match key {
         "byr" => value.len() == 4 && in_range(value, 1920, 2002),
         "iyr" => value.len() == 4 && in_range(value, 2010, 2020),
         "eyr" => value.len() == 4 && in_range(value, 2020, 2030),
@@ -77,30 +73,30 @@ fn is_value_valid(key: &str, value: &str) -> bool {
             lazy_static! {
                 static ref RE: Regex = Regex::new(r"^#[0-9a-f]{6}$").unwrap();
             }
-            return RE.is_match(value);
+            RE.is_match(value)
         },
         "ecl" => {
             lazy_static! {
                 static ref RE: Regex = Regex::new(r"^amb|blu|brn|gry|grn|hzl|oth$").unwrap();
             }
-            return RE.is_match(value);
+            RE.is_match(value)
         },
         "pid" => {
             lazy_static! {
                 static ref RE: Regex = Regex::new(r"^\d{9}$").unwrap();
             }
-            return RE.is_match(value);
+            RE.is_match(value)
         },
         "cid" => true,
         _ => false
-    };
+    }
 }
 
 fn in_range(number: &str, start_inclusive: usize, end_inclusive: usize) -> bool {
-    return match number.parse::<usize>() {
+    match number.parse::<usize>() {
         Ok(value) => value >= start_inclusive && value <= end_inclusive,
         Err(_) => false
-    };
+    }
 }
 
 #[cfg(test)]
