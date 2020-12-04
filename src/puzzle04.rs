@@ -67,7 +67,7 @@ fn is_value_valid(key: &str, value: &str) -> bool {
         "iyr" => value.len() == 4 && in_range(value, 2010, 2020),
         "eyr" => value.len() == 4 && in_range(value, 2020, 2030),
         "hgt" => {
-            match &value[(value.len() - 2)..] {
+            value.len() > 2 && match &value[(value.len() - 2)..] {
                 "cm" => in_range(&value[0..(value.len() - 2)], 150, 193),
                 "in" => in_range(&value[0..(value.len() - 2)], 59, 76),
                 _ => false
