@@ -1,4 +1,5 @@
 use crate::puzzle::AbstractPuzzle;
+use std::collections::BTreeSet;
 
 pub struct Puzzle05 {
     input: String,
@@ -18,18 +19,12 @@ impl AbstractPuzzle for Puzzle05 {
     }
 
     fn solve_part_2(&self) -> String {
-        let mut seat_ids: Vec<usize> = self.input.lines()
+        let seat_ids = self.input.lines()
             .map(|line| seat_id(line))
-            .collect();
-        seat_ids.sort_unstable();
-        for i in 0..seat_ids.len()-1 {
-            let seat_id1 = seat_ids[i];
-            let seat_id2 = seat_ids[i + 1];
-            if seat_id1 + 1 != seat_id2 {
-                return (seat_id1 + 1).to_string();
-            }
-        }
-        unreachable!()
+            .collect::<BTreeSet<_>>();
+        let min = *seat_ids.iter().next().unwrap();
+        let max = *seat_ids.iter().last().unwrap();
+        (min..max).find(|seat_id| !seat_ids.contains(seat_id)).unwrap().to_string()
     }
 }
 
