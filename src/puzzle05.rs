@@ -37,18 +37,12 @@ impl Puzzle05 {
 }
 
 fn seat_id(boarding_pass: &str) -> usize {
-    let mut min_row = 0;
-    let mut max_row = 127;
-    let mut min_col = 0;
-    let mut max_col = 7;
-    boarding_pass.chars().for_each(|c| match c {
-        'F' => max_row -= (max_row - min_row) / 2 + 1,
-        'B' => min_row += (max_row - min_row) / 2 + 1,
-        'L' => max_col -= (max_col - min_col) / 2 + 1,
-        'R' => min_col += (max_col - min_col) / 2 + 1,
-        _ => unreachable!()
-    });
-    min_row * 8 + min_col
+    boarding_pass.chars().fold(0, |n, c| {
+        (n << 1) | match c {
+            'B' | 'R' => 1,
+            _ => 0
+        }
+    })
 }
 
 #[cfg(test)]
